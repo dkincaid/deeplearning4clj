@@ -11,4 +11,5 @@
                  [com.taoensso/timbre "4.2.0"]
                  [com.esotericsoftware/kryo "3.0.3"]]
   :codox {:output-path "doc"}
-  :profiles {:dev {:dependencies [[midje "1.8.3"]]}})
+  :profiles {:dev {:dependencies [[midje "1.8.3"]]
+                   :plugins [[lein-midje "3.0.0"]]}})
