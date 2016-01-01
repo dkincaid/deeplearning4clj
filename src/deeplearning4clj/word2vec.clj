@@ -1,29 +1,23 @@
 (ns deeplearning4clj.word2vec
-  (:import [com.esotericsoftware.kryo Kryo]
-           [com.esotericsoftware.kryo.io Output Input]
-           [java.io InputStream]
-           [org.deeplearning4j.models.embeddings.loader WordVectorSerializer]
-           [org.deeplearning4j.models.embeddings.wordvectors WordVectors]
-           [org.deeplearning4j.models.word2vec Word2Vec]
-           [org.deeplearning4j.models.word2vec Word2Vec$Builder]
-           [org.deeplearning4j.models.word2vec.wordstore.inmemory InMemoryLookupCache]
-           [org.deeplearning4j.plot BarnesHutTsne$Builder]
-           [org.deeplearning4j.text.sentenceiterator SentenceIterator FileSentenceIterator]
-           [org.deeplearning4j.text.sentenceiterator SentencePreProcessor]
-           [org.deeplearning4j.text.tokenization.tokenizer Tokenizer TokenPreProcess]
-           [org.deeplearning4j.text.tokenization.tokenizerfactory TokenizerFactory DefaultTokenizerFactory]
-           [org.deeplearning4j.util SerializationUtils]
-           [org.nd4j.linalg.api.ops.impl.accum.distances CosineSimilarity])
-  (:require [clojure.string :as str]
-            [taoensso.timbre :as timbre]
-            [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [taoensso.timbre :as timbre])
+  (:import [com.esotericsoftware.kryo.io Input Output]
+           com.esotericsoftware.kryo.Kryo
+           java.io.InputStream
+           org.deeplearning4j.models.embeddings.loader.WordVectorSerializer
+           org.deeplearning4j.models.word2vec.Word2Vec$Builder
+           org.deeplearning4j.models.word2vec.wordstore.inmemory.InMemoryLookupCache
+           org.deeplearning4j.text.sentenceiterator.SentencePreProcessor
+           org.deeplearning4j.text.tokenization.tokenizer.Tokenizer
+           org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory))
 
 (timbre/refer-timbre)
 
 (def kryo (Kryo.))
 
 (defn save-vectors
-  "Save just the word vectors from the given model."
+  "Save just the word vectors from the given model to the file."
   [w2v filename]
   (WordVectorSerializer/writeWordVectors w2v filename))
 
@@ -33,20 +27,29 @@
   (WordVectorSerializer/loadTxtVectors (io/file filename)))
 
 (defn save-model
-  "Save a Word2Vec model to the given file."
+  "Save a Word2Vec model to the given file. The model is saved in two files both prefixed by the given filename. The vectors
+are saved in <filename>.vectors and the vocab is saved in <filename>.vocab. Uses Kryo to serialize the vocab object."
   [w2v filename]
   (save-vectors w2v (str filename ".vectors"))
   (with-open [o (Output. (io/output-stream (str filename ".vocab")))]
     (.writeObject kryo o (.vocab w2v))))
 
 (defn load-model
-  "Load a Word2Vec model from the given name"
+  "Load a Word2Vec model from the given model name. The model name should be the file path to the location of the .vectors and .vocab
+files that were written by save-model."
   [model-name]
   (let [w2v (load-vectors (str model-name ".vectors"))
         voc (with-open [i (Input. (io/input-stream (str model-name ".vocab")))]
               (.readObject kryo i InMemoryLookupCache))
         _ (.setVocab w2v voc)]
     w2v))
+
+
+(def lowerCaseSentence
+  "A sentence pre-processor that lower cases the sentence"
+  (reify SentencePreProcessor
+    (preProcess [this sentence]
+                (str/lower-case sentence))))
 
 (defn aggregatePreProcessor
   "A sentence pre-processor that applies a list of pre-processors"
@@ -59,11 +62,20 @@
                       processed
                       (recur (rest pp) (.preProcess (first pp) processed)))))))
 
-(defn tokenize
-  "Tokenize on white space, only return tokens longer than 2 and replace tokens of the form #d+ with the string HASHNUM."
-  [s]
-  (->> (str/split s #"\s+")
-       (filter #(> (count %) 2))))
+(def lowerCaseToken
+  "A token pre-processor that lower cases the token"
+  (reify TokenPreProcess
+    (preProcess [this token]
+                (str/lower-case token))))
+
+(defn tokenize-regex
+  "Tokenize on the given regular expression"
+  [regex s]
+  (str/split s regex))
+
+(def tokenize-whitespace
+  "Tokenize on whitespace."
+  (partial tokenize-regex #"\s+"))
 
 (defn tokenizer
   "A tokenizer which utilizes a given function to perform the tokenization of the string."
@@ -100,7 +112,7 @@
                            (reset! preprocessor pp)))))
 
 (defn word2vec
-  "Create a Deeplearning4j Word2Vec object which uses the provided sentence iterator and tokenizer."
+  "Create a Deeplearning4j Word2Vec object which uses the provided sentence iterator and tokenizer. Keyword arguments can be used to set the batch size, minimum frequency, layer size and window size. All have good starting points as defaults."
   [sent-iter tok {:keys [batch-size min-freq layer-size window-size]
                           :or {batch-size 1000
                                min-freq 5
@@ -122,13 +134,14 @@
       (.build)))
 
 (defn fit-model
-  "Training a Word2Vec model."
+  "Training a Word2Vec model. Returns the model."
   [w2v]
   (info "Training the Word2Vec model.")
   (.fit w2v)
   w2v)
 
 (defn fit-and-save-model
+  "Fit the model and save it to the given file. Returns the model."
   [w2v output-file]
   (let [v (fit-model w2v)]
     (if (not (nil? v))

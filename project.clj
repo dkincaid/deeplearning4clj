@@ -10,4 +10,5 @@
                  [org.nd4j/nd4j-jblas "0.4-rc3.6"]
                  [com.taoensso/timbre "4.2.0"]
                  [com.esotericsoftware/kryo "3.0.3"]]
+  :codox {:output-path "doc"}
   :profiles {:dev {:dependencies [[midje "1.8.3"]]}})
