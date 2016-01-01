@@ -148,4 +148,59 @@ files that were written by save-model."
         (save-model v output-file))
     v))
 
+(defn top-n-words
+  "Return the top n most frequent words from the VocabCache."
+  [vocab n]
+  (let [words (.words vocab)
+        word-freqs (into {} (map #(hash-map % (.wordFrequency vocab %)) words))]
+    (take n
+          (into (sorted-map-by (fn [key1 key2]
+                                 (compare [(get word-freqs key2) key2]
+                                          [(get word-freqs key1) key1])))
+                word-freqs))
+    ))
+
+(defn model-summary
+  "Summary of a Word2Vec model."
+  [model]
+  (let [voc (.vocab model)]
+    {;:window (.getWindow model)
+     :numWords (.numWords voc)
+     :totalWordOccurrences (.totalWordOccurrences voc)
+     :totalNumberOfDocs (.totalNumberOfDocs voc)
+     :topTenWords (top-n-words voc 10)
+     }))
+
+(defn add-vectors
+  "Element-wise addition of two or more vectors."
+  [& vs]
+  (reduce #(.add %1 %2) vs))
+
+(defn add-words
+  "Adds the vectors of the words."
+  [model & ws]
+  (let [vs (map #(.getWordVectorMatrix model %) ws)]
+    (apply add-vectors vs)))
+
+(defn mult-vectors
+  "Element-wise multiplication of two or more vectors."
+  [& vs]
+  (reduce #(.muli %1 %2) vs))
+
+(defn mean-vectors
+  "Mean of the given vectors"
+  [& vs]
+  (let [n (+ 1 (count vs))]
+    (.divi (apply add-vectors vs) n)))
+
+(defn mean-words
+  "Mean of the word vectors for the given words"
+  [model & ws]
+  (let [vs (map #(.getWordVectorMatrix model %) ws)]
+    (apply mean-vectors vs)))
+
+(defn combine-vectors
+  "Combine the given word vectors using the provided function."
+  [f vs]
+  (reduce f [] vs))
 
