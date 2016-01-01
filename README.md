@@ -1,6 +1,10 @@
-# deeplearning4clj
+# Deep learning for Clojure
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure library designed to work with the [deeplearning4j](http://deeplearning4j.org) library.
+
+![Travis CI Build Status](https://travis-ci.org/dkincaid/deeplearning4clj.svg?branch=master)
+
+[API Docs](http://dkincaid.github.com/deeplearning4clj)
 
 ## Usage
 
@@ -8,7 +12,6 @@ FIXME
 
 ## License
 
-Copyright © 2015 FIXME
+Copyright © 2016 David Kincaid
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Apache License 2.0.
