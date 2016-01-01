@@ -9,7 +9,7 @@
            org.deeplearning4j.models.word2vec.Word2Vec$Builder
            org.deeplearning4j.models.word2vec.wordstore.inmemory.InMemoryLookupCache
            org.deeplearning4j.text.sentenceiterator.SentencePreProcessor
-           org.deeplearning4j.text.tokenization.tokenizer.Tokenizer
+           [org.deeplearning4j.text.tokenization.tokenizer Tokenizer TokenPreProcess]
            org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory))
 
 (timbre/refer-timbre)
