@@ -1,5 +1,7 @@
 # Deep learning for Clojure
 
+[![Join the chat at https://gitter.im/dkincaid/deeplearning4clj](https://badges.gitter.im/dkincaid/deeplearning4clj.svg)](https://gitter.im/dkincaid/deeplearning4clj?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 
 A Clojure library designed to work with the [deeplearning4j](http://deeplearning4j.org) library.
 
