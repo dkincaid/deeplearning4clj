@@ -1,5 +1,6 @@
 # Deep learning for Clojure
 
+
 A Clojure library designed to work with the [deeplearning4j](http://deeplearning4j.org) library.
 
 ![Travis CI Build Status](https://travis-ci.org/dkincaid/deeplearning4clj.svg?branch=master)
